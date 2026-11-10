@@ -1,0 +1,39 @@
+services:
+
+  app:
+    build: .
+    image: soban-docker-app:v1
+    container_name: myapp
+    ports:
+      - "3000:3000"
+
+    environment:
+      DATABASE_URL: postgres://appuser:apppass@db:5432/appdb
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    container_name: mydb
+
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+      POSTGRES_DB: appdb
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
